@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        #box {
+            width: 350px;
+            height: 500px;
+            border: 1px solid #000000;
+        }
+        #time {
+            margin-top: 10px;
+        }
+        input {
+            width: 60px;
+            margin-right: 20px;
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 30px;
+        }
+        label {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #title {
+            margin: 0 auto;
+            width: 200px;
+            height: 180px;
+            /*font-size: 60px;*/
+            /*font-weight: bold;*/
+            font: bold 120px "黑体";
+            line-height: 200px;
+            text-align: center;
+        }
+        p {
+            font-size: 24px;
+            /*font-weight: bold;*/
+            text-indent: 2em;
+        }
+        span {
+            /*display: inline-block;*/
+            font-size: 54px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #word {
+            text-align: center;
+        }
+        #remove {
+            height: 40px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+<div id="box">
+    <div id="time">
+        <label for="sec">剩余时间:</label>
+        <input type="text" id="sec"/>
+        <label for="num">分数:</label>
+        <input type="text" id="num"/>
+    </div>
+    <div id="title">黑</div>
+    <p>根据上面字的颜色从下面选择正确的字，选择正确自动开始</p>
+    <div id="word">
+        <span id="one">黑</span>
+        <span id="two">红</span>
+        <span id="three">黄</span>
+        <span id="four">绿</span>
+        <span id="five">蓝</span>
+    </div>
+    <div id="remove">重新开始</div>
+</div>
+</body>
+</html>
+<script>
+    var sec =  document.getElementById("sec");
+    var num =  document.getElementById("num");
+    var title =  document.getElementById("title");
+    var spanList = document.getElementsByTagName("span");
+    var remove =  document.getElementById("remove");
+//总体思路:
+// 第一步:创建一个计时器,设置好游戏时间,每隔一秒,减一,为0时停止计时器,游戏结束
+//第二步:创建两个数组,一个保存颜色,一个保存颜色对应的字,还要创建一个对象,把颜色当成属性,把对应颜色的
+ //字当作属性值保存起来
+//第三步 :创建一个函数,随机改变中间题目字的颜色和文字,随机数在0-4之间
+//第四步:创建一个函数,生成一组随机数,长度为待选字的个数,随机数不能一致
+//第五步:创建一个函数,随机改变待选字的颜色和文字
+//第六步:给每一个待选字加一个点击事件,如果上面文字的颜色和待选字的文字相同,就更新题目和待选字
+    sec.value = 60;
+    var s = sec.value;
+    var index, index1;
+    var score = 0;
+    var add;
+    //建立一个计时器,游戏时间可以自己设定,每隔一秒减一,把更新后的时间显示到倒计时框里
+    time();
+    function time() {
+        clearInterval(sec.timeID);
+        sec.timeID = setInterval(function () {
+            s--;
+            if (s == 0) {
+                //当秒数为0时,游戏结束,这里设立一个标记,结束后把标记改为false,在后面的点击事件里,如果
+                //检测到标记为false,就不执行后面的代码,这样能保证在计时器结束后,点击不在执行
+                clearInterval(sec.timeID);
+                alert("游戏结束!");
+                add = false;
+            }
+            sec.value = s;
+
+        }, 1000)
+    }
+//声明两个数组,一个保存颜色,一个保存颜色所对应的字
+    var color = ["black","red","yellow","green","blue"];
+    var words = ["黑","红","黄","绿","蓝"];
+    //声明一个对象,颜色为属性,对应的值为文字,因为这个游戏是判定题目的颜色选择对应的字
+    var match = {
+        "black":"黑",
+         "red":"红",
+         "yellow":"黄",
+         "green" :"绿",
+         "blue":"蓝"
+    };
+//创建一个函数,用来接收随机数数组,这里封装成一个函数,因为后面的点击事件中如果答对,这些就要重新生成
+    //这里创建随机数组是因为,下面的字有五个,每次需要5个随机数匹配对应的颜色内容,而且这五个随机数要
+    //都不一样,以免出现重复的颜色和文字,这里用数组去重,生成新数组的方法,找出五个不同的随机数,随机数的
+    //值在0-4之间,因为数组的下标是0-4
+    function arrs() {
+
+        var arr = [];
+        while (arr.length != spanList.length) {
+            index = Math.floor(Math.random() * 5);
+//        arr[0] = index;
+            var flag = true;
+            for (var j = 0; j < arr.length; j++) {
+                if (index == arr[j]) {
+                    flag = false;
+                    continue;
+                }
+            }
+            if (flag) {
+                arr[arr.length] = index;
+            }
+        }
+        //这里要返回一个数组,因为我们后面要用到的是数组里的值
+        return arr;
+        //console.log(arr);
+    }
+//创建待选字的颜色和文字,声明两个变量接收随机数组的函数,循环遍历每个装字的盒子,给每一个盒子添加
+    //数组中随机数对应下标的颜色,文字
+    function showWord() {
+        var colorIndex = arrs();
+        var wordIndex = arrs();
+
+        for (var i = 0; i < spanList.length; i++) {
+            spanList[i].style.color = color[colorIndex[i]];
+            spanList[i].innerHTML = words[wordIndex[i]];
+        }
+    }
+
+    //这些函数一创建就调用一次,这样每次打开页面和刷新的时候页面显示的都是不同字和颜色
+    showWord();
+    //创建题目的文字和颜色,因为只有一个字,所以用两个变量接收两个随机数就可以了,一个随机数变量对应的文字
+    //数组赋值给文字,一个随机数变量对应的颜色数组赋值给颜色
+    function titles() {
+        var index2 = Math.floor(Math.random()*5);
+        var index3 = Math.floor(Math.random()*5);
+        title.style.color = color[index2];
+        title.innerHTML = words[index3];
+    }
+    titles();
+    //遍历待选字,给每个字加一个点击事件,判断当前点击的字是否是题目字的颜色对应的字,如:题目的字
+    //是红色,那下面的待选字的盒子里的内容为红,这里可以用上面创建的对象来判断
+    for(var i = 0; i < spanList.length ; i++){
+        spanList[i].onclick = function(){
+            if(add == false ){
+                return;
+            }
+            //先声明一个变量接收题目字的颜色,再找到对象中对应属性的值,与当前点中的字匹配,如果相等
+            //则选择正确,分数加一,显示到分数框,调用生成题目的函数和生成待选字的函数,重新更新题目和待选字
+            var c = title.style.color;
+
+            if( this.innerHTML == match[c] ){
+                score++;
+                num.value = score;
+                titles();
+                showWord();
+            }
+        }
+    }
+
+    remove.onclick = function(){
+        s = 60;
+        time();
+        titles();
+        showWord();
+    }
+</script>
